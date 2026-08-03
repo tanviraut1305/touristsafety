@@ -15,7 +15,7 @@ public class createaccountreq {
     private String aadhaarNumber;
 
     private String passportNumber;
-
+    private String password;
     private String country;
 
     @NotBlank(message = "Mobile number is required")

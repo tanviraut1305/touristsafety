@@ -30,7 +30,7 @@ public class Tourist {
     private String passportNumber;
 
     private String country;
-
+    private String password;
     @Column(nullable = false, unique = true)
     private String mobileNumber;
 
