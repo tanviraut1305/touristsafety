@@ -8,6 +8,7 @@ import org.example.demo.dto.createaccountreq;
 import org.example.demo.dto.loginreq;
 import org.example.demo.dto.loginresponse;
 import org.example.demo.dto.verifyreq;
+import org.example.demo.dto.profile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,15 +32,19 @@ public class TouristServiceImpl implements touristservice {
     @Autowired
     private jwtservice jwtService;
 
+
+    // =========================
+    // SEND OTP
+    // =========================
     @Override
     public void sendOtp(createaccountreq request) {
 
-        // Step 1 : Check Mobile Number
+        // Step 1: Check Mobile Number
         if (touristRepository.existsByMobileNumber(request.getMobileNumber())) {
             throw new RuntimeException("Mobile Number already registered.");
         }
 
-        // Step 2 : Check Tourist Type
+        // Step 2: Check Tourist Type
         if (request.getTouristType().name().equals("INDIAN")) {
 
             if (touristRepository.existsByAadhaarNumber(request.getAadhaarNumber())) {
@@ -51,25 +56,24 @@ public class TouristServiceImpl implements touristservice {
             if (touristRepository.existsByPassportNumber(request.getPassportNumber())) {
                 throw new RuntimeException("Passport Number already registered.");
             }
-
         }
 
-        // Step 3 : Generate OTP
+        // Step 3: Generate OTP
         String generatedOtp = generateOtp();
 
-        // Step 4 : Print OTP
+        // Step 4: Print OTP
         System.out.println("Generated OTP : " + generatedOtp);
 
-        // Step 5 : Create OTP Object
+        // Step 5: Create OTP Object
         otp otpEntity = new otp();
         otpEntity.setMobileNumber(request.getMobileNumber());
         otpEntity.setOtp(generatedOtp);
         otpEntity.setExpiryTime(LocalDateTime.now().plusMinutes(5));
 
-        // Step 6 : Save OTP
+        // Step 6: Save OTP
         otpRepository.save(otpEntity);
 
-        // Step 7 : Save Tourist
+        // Step 7: Save Tourist
         Tourist tourist = Tourist.builder()
                 .touristType(request.getTouristType())
                 .aadhaarNumber(request.getAadhaarNumber())
@@ -85,6 +89,10 @@ public class TouristServiceImpl implements touristservice {
         System.out.println("OTP Saved Successfully");
     }
 
+
+    // =========================
+    // VERIFY OTP
+    // =========================
     @Override
     public void verifyOtp(verifyreq request) {
 
@@ -108,7 +116,8 @@ public class TouristServiceImpl implements touristservice {
 
         Tourist tourist = touristRepository
                 .findByMobileNumber(request.getMobileNumber())
-                .orElseThrow(() -> new RuntimeException("Tourist not found."));
+                .orElseThrow(() ->
+                        new RuntimeException("Tourist not found."));
 
         tourist.setVerified(true);
 
@@ -118,6 +127,11 @@ public class TouristServiceImpl implements touristservice {
 
         System.out.println("OTP Verified Successfully");
     }
+
+
+    // =========================
+    // LOGIN
+    // =========================
     @Override
     public loginresponse login(loginreq request) {
 
@@ -130,7 +144,8 @@ public class TouristServiceImpl implements touristservice {
             throw new RuntimeException("Account not verified.");
         }
 
-        if (!passwordEncoder.matches(request.getPassword(),
+        if (!passwordEncoder.matches(
+                request.getPassword(),
                 tourist.getPassword())) {
 
             throw new RuntimeException("Invalid Password.");
@@ -142,8 +157,62 @@ public class TouristServiceImpl implements touristservice {
                 token,
                 "Login Successful"
         );
-
     }
+
+
+    // =========================
+    // GET PROFILE
+    // =========================
+    @Override
+    public profile getProfile(String mobileNumber) {
+
+        Tourist tourist = touristRepository
+                .findByMobileNumber(mobileNumber)
+                .orElseThrow(() ->
+                        new RuntimeException("Tourist not found."));
+
+        profile response = new profile();
+
+        response.setFullName(tourist.getFullName());
+        response.setEmail(tourist.getEmail());
+        response.setDateOfBirth(tourist.getDateOfBirth());
+        response.setGender(tourist.getGender());
+        response.setAddress(tourist.getAddress());
+        response.setEmergencyContact(tourist.getEmergencyContact());
+
+        return response;
+    }
+
+
+    // =========================
+    // UPDATE PROFILE
+    // =========================
+    @Override
+    public profile updateProfile(
+            String mobileNumber,
+            profile request) {
+
+        Tourist tourist = touristRepository
+                .findByMobileNumber(mobileNumber)
+                .orElseThrow(() ->
+                        new RuntimeException("Tourist not found."));
+
+        tourist.setFullName(request.getFullName());
+        tourist.setEmail(request.getEmail());
+        tourist.setDateOfBirth(request.getDateOfBirth());
+        tourist.setGender(request.getGender());
+        tourist.setAddress(request.getAddress());
+        tourist.setEmergencyContact(request.getEmergencyContact());
+
+        touristRepository.save(tourist);
+
+        return getProfile(mobileNumber);
+    }
+
+
+    // =========================
+    // GENERATE OTP
+    // =========================
     private String generateOtp() {
 
         int otp = 100000 + new Random().nextInt(900000);

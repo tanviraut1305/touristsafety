@@ -38,6 +38,13 @@ public class Tourist {
 
     private LocalDateTime createdAt;
 
+    private String fullName;
+    private String email;
+    private String dateOfBirth;
+    private String gender;
+    private String address;
+    private String emergencyContact;
+
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();
