@@ -1,5 +1,6 @@
 package org.example.demo.Service;
 
+import org.example.demo.Entity.Tourist;
 import org.example.demo.dto.createaccountreq;
 import org.example.demo.dto.verifyreq;
 import org.example.demo.dto.loginreq;
@@ -14,4 +15,5 @@ public interface touristservice{
     profile getProfile(String mobileNumber);
     profile updateProfile(String mobileNumber, profile request);
 
+    Tourist getTouristByEmail(String email);
 }

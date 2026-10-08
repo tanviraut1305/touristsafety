@@ -12,21 +12,22 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.Key;
 import java.util.Collections;
 
 @Component
 public class jwtautenticator extends OncePerRequestFilter {
 
     // IMPORTANT:
-    // This secret MUST be exactly the same secret used
-    // when creating/signing the JWT in your login service.
+    // This secret must be exactly the same as the secret
+    // used in jwtservice.java
     private static final String SECRET =
             "MySuperSecretKeyForTouristSafetyApplication123456789";
 
-    private final Key key =
+    // Use SecretKey, NOT java.security.Key
+    private final SecretKey key =
             Keys.hmacShaKeyFor(
                     SECRET.getBytes(StandardCharsets.UTF_8)
             );
@@ -38,21 +39,22 @@ public class jwtautenticator extends OncePerRequestFilter {
             FilterChain filterChain)
             throws ServletException, IOException {
 
+        // Get Authorization header
         String authHeader = request.getHeader("Authorization");
 
-        // No JWT provided.
-        // Allow the request to continue.
+        // No JWT provided
         if (authHeader == null || authHeader.isBlank()) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Authorization header exists but is not Bearer format.
+        // Check Bearer format
         if (!authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
+        // Extract token
         String token = authHeader.substring(7).trim();
 
         // Empty token
@@ -63,15 +65,17 @@ public class jwtautenticator extends OncePerRequestFilter {
 
         try {
 
+            // Validate and parse JWT
             Claims claims = Jwts.parser()
                     .verifyWith(key)
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
 
+            // Get mobile number from JWT subject
             String mobileNumber = claims.getSubject();
 
-            // Make sure subject exists
+            // Make sure mobile number exists
             if (mobileNumber != null && !mobileNumber.isBlank()) {
 
                 UsernamePasswordAuthenticationToken authentication =
@@ -81,6 +85,7 @@ public class jwtautenticator extends OncePerRequestFilter {
                                 Collections.emptyList()
                         );
 
+                // Store authentication in Spring Security
                 SecurityContextHolder
                         .getContext()
                         .setAuthentication(authentication);
@@ -88,7 +93,7 @@ public class jwtautenticator extends OncePerRequestFilter {
 
         } catch (Exception e) {
 
-            // Remove invalid authentication
+            // Invalid JWT
             SecurityContextHolder.clearContext();
 
             System.out.println(

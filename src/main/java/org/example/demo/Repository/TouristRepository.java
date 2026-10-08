@@ -15,4 +15,5 @@ public interface TouristRepository extends JpaRepository<Tourist, Long> {
 
     Optional<Tourist> findByMobileNumber(String mobileNumber);
 
+    Optional<Tourist> findByEmail(String email);
 }

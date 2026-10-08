@@ -211,6 +211,19 @@ public class TouristServiceImpl implements touristservice {
 
 
     // =========================
+    // GET TOURIST BY EMAIL
+    // =========================
+    @Override
+    public Tourist getTouristByEmail(String email) {
+
+        return (Tourist) touristRepository
+                .findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("Tourist not found."));
+    }
+
+
+    // =========================
     // GENERATE OTP
     // =========================
     private String generateOtp() {
