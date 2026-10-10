@@ -17,9 +17,12 @@ public class CrimeSpatialService {
     private static final double RADIUS_KM = 0.5;
 
     // Area of a circle with radius 0.5 km
-    private static final double AREA_KM2 = Math.PI * RADIUS_KM * RADIUS_KM;
+    private static final double AREA_KM2 =
+            Math.PI * RADIUS_KM * RADIUS_KM;
 
-    public CrimeSpatialService(CrimeRecordRepository crimeRecordRepository) {
+    public CrimeSpatialService(
+            CrimeRecordRepository crimeRecordRepository) {
+
         this.crimeRecordRepository = crimeRecordRepository;
     }
 
@@ -35,7 +38,8 @@ public class CrimeSpatialService {
             throw new IllegalArgumentException("Invalid longitude");
         }
 
-        List<crimerecord> records = crimeRecordRepository.findAll();
+        List<crimerecord> records =
+                crimeRecordRepository.findAll();
 
         int nearbyRecordCount = 0;
 
@@ -62,12 +66,14 @@ public class CrimeSpatialService {
                 nearbyRecordCount++;
 
                 // Total crime incidents in this record
-                double recordCrimeCount = calculateTotalCrime(record);
+                double recordCrimeCount =
+                        calculateTotalCrime(record);
 
                 crimeCount500m += recordCrimeCount;
 
                 // Weighted crime severity
-                crimeSeverity500m += calculateCrimeSeverity(record);
+                crimeSeverity500m +=
+                        calculateCrimeSeverity(record);
             }
         }
 
@@ -75,11 +81,24 @@ public class CrimeSpatialService {
         double crimeDensity500m =
                 crimeCount500m / AREA_KM2;
 
-        Map<String, Double> result = new HashMap<>();
+        Map<String, Double> result =
+                new HashMap<>();
 
-        result.put("crime_count_500m", crimeCount500m);
-        result.put("crime_severity_500m", crimeSeverity500m);
-        result.put("crime_density_500m", crimeDensity500m);
+        result.put(
+                "crime_count_500m",
+                crimeCount500m
+        );
+
+        result.put(
+                "crime_severity_500m",
+                crimeSeverity500m
+        );
+
+        result.put(
+                "crime_density_500m",
+                crimeDensity500m
+        );
+
         result.put(
                 "nearby_record_count",
                 (double) nearbyRecordCount
@@ -92,7 +111,8 @@ public class CrimeSpatialService {
      * Calculates the total number of crime incidents
      * contained in one CrimeRecord.
      */
-    private double calculateTotalCrime(crimerecord record) {
+    private double calculateTotalCrime(
+            crimerecord record) {
 
         return safe(record.getMurder())
                 + safe(record.getAttemptToMurder())
@@ -117,40 +137,32 @@ public class CrimeSpatialService {
     /**
      * Calculates weighted crime severity.
      *
-     * IMPORTANT:
-     * Your documentation defines high/medium/lower severity
-     * but does not specify the exact numerical weights.
-     *
-     * Replace these values with the exact weights used when
-     * your Random Forest model was trained.
+     * These weights match the configuration used
+     * by the trained safety model.
      */
-    private double calculateCrimeSeverity(crimerecord record) {
+    private double calculateCrimeSeverity(
+            crimerecord record) {
 
         double severity = 0.0;
 
-        // High severity
         severity += safe(record.getMurder()) * 10;
-        severity += safe(record.getRape()) * 10;
-        severity += safe(record.getKidnapping()) * 8;
-
-        // Medium severity
-        severity += safe(record.getAttemptToMurder()) * 8;
-        severity += safe(record.getDacoity()) * 7;
-        severity += safe(record.getRobbery()) * 6;
-        severity += safe(record.getAssault()) * 6;
-        severity += safe(record.getCrimesAgainstWomen()) * 6;
-        severity += safe(record.getMolestation()) * 6;
-        severity += safe(record.getChainSnatching()) * 5;
-        severity += safe(record.getVehicleTheft()) * 5;
-        severity += safe(record.getHouseBreaking()) * 5;
-        severity += safe(record.getDrugRelatedCrime()) * 5;
-        severity += safe(record.getCyberCrime()) * 4;
-        severity += safe(record.getCheating()) * 4;
-
-        // Lower severity
+        severity += safe(record.getAttemptToMurder()) * 9;
+        severity += safe(record.getRobbery()) * 7;
+        severity += safe(record.getDacoity()) * 8;
         severity += safe(record.getTheft()) * 3;
-        severity += safe(record.getPickpocketing()) * 2;
+        severity += safe(record.getHouseBreaking()) * 4;
+        severity += safe(record.getVehicleTheft()) * 3;
+        severity += safe(record.getAssault()) * 6;
+        severity += safe(record.getCrimesAgainstWomen()) * 7;
+        severity += safe(record.getCyberCrime()) * 2;
+        severity += safe(record.getKidnapping()) * 8;
+        severity += safe(record.getRape()) * 10;
+        severity += safe(record.getMolestation()) * 7;
+        severity += safe(record.getChainSnatching()) * 5;
+        severity += safe(record.getPickpocketing()) * 3;
         severity += safe(record.getMissingPerson()) * 2;
+        severity += safe(record.getCheating()) * 2;
+        severity += safe(record.getDrugRelatedCrime()) * 4;
 
         return severity;
     }
@@ -169,8 +181,11 @@ public class CrimeSpatialService {
 
         final double EARTH_RADIUS_KM = 6371.0;
 
-        double lat1Rad = Math.toRadians(lat1);
-        double lat2Rad = Math.toRadians(lat2);
+        double lat1Rad =
+                Math.toRadians(lat1);
+
+        double lat2Rad =
+                Math.toRadians(lat2);
 
         double deltaLat =
                 Math.toRadians(lat2 - lat1);

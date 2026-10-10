@@ -37,7 +37,8 @@ public class securityconfig {
                         .requestMatchers(
                                 "/api/tourist/send-otp",
                                 "/api/tourist/verify-otp",
-                                "/api/tourist/login"
+                                "/api/tourist/login",
+                                "/api/spatial/**"
                         ).permitAll()
 
                         // Everything else requires JWT
