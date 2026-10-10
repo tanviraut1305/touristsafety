@@ -12,19 +12,28 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Load the saved model package
+# Load the trained model package
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR / "corrected_safety_model.pkl"
 
 try:
     model_data = joblib.load(MODEL_PATH)
 
-    # The pickle contains a dictionary, not just the model
+    if not isinstance(model_data, dict):
+        raise ValueError("The model file must contain a dictionary.")
+
     model = model_data["model"]
     features = model_data["features"]
 
+    if not callable(getattr(model, "predict", None)):
+        raise ValueError("Loaded model does not support prediction.")
+
+    if not isinstance(features, (list, tuple)) or not features:
+        raise ValueError("Model features are missing or invalid.")
+
     print("Model loaded successfully.")
-    print("Expected model features:", features)
+    print("Model type:", type(model).__name__)
+    print("Model features:", features)
 
 except Exception as exc:
     raise RuntimeError(
@@ -58,7 +67,7 @@ def health():
 @app.post("/predict")
 def predict_safety(data: SafetyFeatures):
     try:
-        # Map incoming values by feature name
+        # Match input values to the model's expected feature names.
         feature_values = {
             "crime_count_500m": data.crime_count_500m,
             "crime_severity_500m": data.crime_severity_500m,
@@ -66,10 +75,23 @@ def predict_safety(data: SafetyFeatures):
             "nearby_record_count": data.nearby_record_count
         }
 
-        # Use the feature order saved with the trained model
-        input_data = np.array([[
-            feature_values[name] for name in features
-        ]], dtype=float)
+        missing_features = [
+            name for name in features
+            if name not in feature_values
+        ]
+
+        if missing_features:
+            raise ValueError(
+                f"Unsupported model features: {missing_features}"
+            )
+
+        input_data = np.array(
+            [[feature_values[name] for name in features]],
+            dtype=float
+        )
+
+        if not np.isfinite(input_data).all():
+            raise ValueError("Input contains invalid numeric values.")
 
         prediction = model.predict(input_data)
         safety_score = float(prediction[0])
