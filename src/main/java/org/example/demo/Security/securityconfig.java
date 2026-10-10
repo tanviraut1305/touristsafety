@@ -38,7 +38,8 @@ public class securityconfig {
                                 "/api/tourist/send-otp",
                                 "/api/tourist/verify-otp",
                                 "/api/tourist/login",
-                                "/api/spatial/**"
+                                "/api/spatial/**",
+                                "/api/safety/**"
                         ).permitAll()
 
                         // Everything else requires JWT
